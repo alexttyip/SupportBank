@@ -12,6 +12,19 @@ namespace SupportBank
 
         static void Main(string[] args)
         {
+            string name = null;
+
+            if (args[0] == "List")
+            {
+                if (args[1] != "All")
+                    name = args[1];
+            }
+            else
+            {
+                Console.Out.WriteLine("Available commands are \"List All\" and \"List [Person]\".");
+                return;
+            }
+
             using (var parser = new TextFieldParser(@"C:\work\training\SupportBank\Transactions2014.csv"))
             {
                 parser.TextFieldType = FieldType.Delimited;
@@ -26,8 +39,17 @@ namespace SupportBank
                 }
             }
 
-            // PrintListAll();
-            PrintPerson("Tim L");
+            if (name == null)
+                PrintListAll();
+            else
+                try
+                {
+                    PrintPerson(name);
+                }
+                catch (UndefinedPersonException)
+                {
+                    Console.Out.WriteLine($"The person {name} is not found.");
+                }
         }
 
         private static void PrintListAll()
@@ -60,7 +82,13 @@ namespace SupportBank
 
         private static void PrintPerson(string name)
         {
-            foreach (var transaction in Transactions.Where(transaction => transaction.From == name || transaction.To == name))
+            var personTransactions =
+                Transactions.FindAll(transaction => transaction.From == name || transaction.To == name);
+
+            if (personTransactions.Count == 0)
+                throw new UndefinedPersonException();
+
+            foreach (var transaction in personTransactions)
             {
                 Console.Out.WriteLine(
                     $"On {transaction.Date.ToString("d", CultureInfo.CurrentCulture)}, {transaction.From} owes {transaction.To} {transaction.Amount:F2} for {transaction.Narrative}.");
@@ -108,5 +136,9 @@ namespace SupportBank
             Owes = 0;
             Owed = 0;
         }
+    }
+
+    public class UndefinedPersonException : Exception
+    {
     }
 }
