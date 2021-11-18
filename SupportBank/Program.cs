@@ -14,6 +14,12 @@ namespace SupportBank
         {
             string name = null;
 
+            if (args.Length == 0)
+            {
+                Console.Out.WriteLine("Available commands are \"List All\" and \"List [Person]\".");
+                return;
+            }
+
             if (args[0] == "List")
             {
                 if (args[1] != "All")
@@ -25,19 +31,7 @@ namespace SupportBank
                 return;
             }
 
-            using (var parser = new TextFieldParser(@"C:\work\training\SupportBank\Transactions2014.csv"))
-            {
-                parser.TextFieldType = FieldType.Delimited;
-                parser.SetDelimiters(",");
-                // Skip header line
-                parser.ReadLine();
-                while (!parser.EndOfData)
-                {
-                    //Processing row
-                    var fields = parser.ReadFields();
-                    Transactions.Add(new Transaction(fields));
-                }
-            }
+            ReadCsv();
 
             if (name == null)
                 PrintListAll();
@@ -50,6 +44,21 @@ namespace SupportBank
                 {
                     Console.Out.WriteLine($"The person {name} is not found.");
                 }
+        }
+
+        private static void ReadCsv()
+        {
+            using var parser = new TextFieldParser(@"C:\work\training\SupportBank\Transactions2014.csv");
+            parser.TextFieldType = FieldType.Delimited;
+            parser.SetDelimiters(",");
+            // Skip header line
+            parser.ReadLine();
+            while (!parser.EndOfData)
+            {
+                //Processing row
+                var fields = parser.ReadFields();
+                Transactions.Add(new Transaction(fields));
+            }
         }
 
         private static void PrintListAll()
