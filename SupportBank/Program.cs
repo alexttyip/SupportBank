@@ -1,15 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using Microsoft.VisualBasic.FileIO;
 
 namespace SupportBank
 {
     class Program
     {
+        private static readonly List<Transaction> Transactions = new();
+
         static void Main(string[] args)
         {
-            var transactions = new List<Transaction>();
-            using (TextFieldParser parser = new TextFieldParser(@"C:\work\training\SupportBank\Transactions2014.csv"))
+            using (var parser = new TextFieldParser(@"C:\work\training\SupportBank\Transactions2014.csv"))
             {
                 parser.TextFieldType = FieldType.Delimited;
                 parser.SetDelimiters(",");
@@ -19,18 +22,19 @@ namespace SupportBank
                 {
                     //Processing row
                     var fields = parser.ReadFields();
-                    transactions.Add(new Transaction(fields));
+                    Transactions.Add(new Transaction(fields));
                 }
             }
 
-            PrintListAll(transactions);
+            // PrintListAll();
+            PrintPerson("Tim L");
         }
 
-        private static void PrintListAll(List<Transaction> transactions)
+        private static void PrintListAll()
         {
             var people = new Dictionary<string, Person>();
 
-            foreach (var transaction in transactions)
+            foreach (var transaction in Transactions)
             {
                 var from = transaction.From;
                 var to = transaction.To;
@@ -47,10 +51,19 @@ namespace SupportBank
 
             foreach (var (name, person) in people)
             {
-                var owe = person.Owes;
+                var owes = person.Owes;
                 var owed = person.Owed;
 
-                Console.Out.WriteLine($"{name} owes {owe:F2} and is owed {owed:F2}");
+                Console.Out.WriteLine($"{name} owes {owes:F2} and is owed {owed:F2}");
+            }
+        }
+
+        private static void PrintPerson(string name)
+        {
+            foreach (var transaction in Transactions.Where(transaction => transaction.From == name || transaction.To == name))
+            {
+                Console.Out.WriteLine(
+                    $"On {transaction.Date.ToString("d", CultureInfo.CurrentCulture)}, {transaction.From} owes {transaction.To} {transaction.Amount:F2} for {transaction.Narrative}.");
             }
         }
     }
@@ -73,7 +86,7 @@ namespace SupportBank
         }
 
         public Transaction(string[] csvFields) : this(
-            DateTime.ParseExact(csvFields[0], "d", null),
+            DateTime.ParseExact(csvFields[0], "d", CultureInfo.CurrentCulture),
             csvFields[1],
             csvFields[2],
             csvFields[3],
