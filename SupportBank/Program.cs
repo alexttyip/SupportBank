@@ -18,14 +18,39 @@ namespace SupportBank
                 while (!parser.EndOfData)
                 {
                     //Processing row
-                    string[] fields = parser.ReadFields();
+                    var fields = parser.ReadFields();
                     transactions.Add(new Transaction(fields));
                 }
             }
 
+            PrintListAll(transactions);
+        }
+
+        private static void PrintListAll(List<Transaction> transactions)
+        {
+            var people = new Dictionary<string, Person>();
+
             foreach (var transaction in transactions)
             {
-                Console.Out.WriteLine(transaction.From);
+                var from = transaction.From;
+                var to = transaction.To;
+
+                if (!people.ContainsKey(from))
+                    people[from] = new Person(from);
+
+                if (!people.ContainsKey(to))
+                    people[to] = new Person(to);
+
+                people[from].Owes += transaction.Amount;
+                people[to].Owed += transaction.Amount;
+            }
+
+            foreach (var (name, person) in people)
+            {
+                var owe = person.Owes;
+                var owed = person.Owed;
+
+                Console.Out.WriteLine($"{name} owes {owe:F2} and is owed {owed:F2}");
             }
         }
     }
@@ -55,6 +80,20 @@ namespace SupportBank
             double.Parse(csvFields[4])
         )
         {
+        }
+    }
+
+    class Person
+    {
+        public string Name { get; }
+        public double Owes { get; set; }
+        public double Owed { get; set; }
+
+        public Person(string name)
+        {
+            Name = name;
+            Owes = 0;
+            Owed = 0;
         }
     }
 }
